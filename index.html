@@ -759,10 +759,14 @@
         <span style="font-size:12px; background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:6px; font-weight:700;">Live Yes / No Check</span>
       </div>
       <div class="card-subtitle">
-        Enter the <strong>Review / Today's Date</strong> and the customer's <strong>First Due Date</strong>. The calculator follows the current SOP cutoff logic and tells you exactly how to answer the DingTalk date fields.
+        Enter the <strong>Customer ID</strong>, <strong>Review / Today's Date</strong>, and the customer's <strong>First Due Date</strong>. The calculator automatically checks the official ENS Extension List and tells you exactly how to answer the DingTalk fields.
       </div>
 
       <div class="calc-grid">
+        <div class="calc-field">
+          <label for="calcCustomer">Customer ID</label>
+          <input type="text" id="calcCustomer" placeholder="e.g. C18071" oninput="calculateDecision()" />
+        </div>
         <div class="calc-field">
           <label for="calcToday">Review / Today's Date</label>
           <input type="date" id="calcToday" onchange="calculateDecision()" />
@@ -770,13 +774,6 @@
         <div class="calc-field">
           <label for="calcDue">First Due Date</label>
           <input type="date" id="calcDue" onchange="calculateDecision()" />
-        </div>
-        <div class="calc-field">
-          <label for="calcExtension">Customer on ENS Extension List?</label>
-          <select id="calcExtension" onchange="calculateDecision()">
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
         </div>
       </div>
 
@@ -811,7 +808,7 @@
       </div>
 
       <div class="alert-box" style="margin-top:14px; background:#f8fafc; border-color:#cbd5e1; border-left-color:#64748b; color:#334155;">
-        <strong>Rule used by this calculator:</strong> First Due Date is the aging starting point. The current SOP visual uses a +10-day cutoff for the “Over 10 Business Days” field and +30 <strong>calendar days</strong> for the “Over 30 Days Past Due” field.
+        <strong>Rule used by this calculator:</strong> First Due Date is the aging starting point. The current SOP visual uses a +10-day cutoff for the “Over 10 Business Days” field and +30 <strong>calendar days</strong> for the “Over 30 Days Past Due” field. Extension status is matched automatically against the current ENS Extension Customer List.
       </div>
     </div>
   </section>
@@ -1271,6 +1268,13 @@
   }
 
 
+  const ENS_EXTENSION_CUSTOMERS = new Set([
+    "C13912","C10852","C01596","C11375","C03719","C19952","C07524","C16179","C04528",
+    "C09413","C20076","C01415","C03504","C16979","C03863","C10196","C01905","C09818",
+    "C13746","C12612","C17423","C12188","C06223","C14271","C00471","C10466","C03578",
+    "C00700","C18071","100633","C13179","C08383","C11351","C07687","C07100","C07518","C07604"
+  ]);
+
   function localISODate(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth()+1).padStart(2,'0');
@@ -1292,10 +1296,11 @@
   function calculateDecision() {
     const today = parseLocalDate(document.getElementById('calcToday').value);
     const due = parseLocalDate(document.getElementById('calcDue').value);
-    const ext = document.getElementById('calcExtension').value === 'yes';
+    const customerId = (document.getElementById('calcCustomer').value || '').trim().toUpperCase();
+    const ext = customerId !== '' && ENS_EXTENSION_CUSTOMERS.has(customerId);
     const err = document.getElementById('calcError');
 
-    document.getElementById('calcExtResult').textContent = ext ? 'YES' : 'NO';
+    document.getElementById('calcExtResult').textContent = customerId ? (ext ? 'YES' : 'NO') : '—';
     document.getElementById('calcExtResult').className = 'result-value ' + (ext ? 'result-yes' : 'result-no');
 
     if (!today || !due) {
@@ -1327,12 +1332,12 @@
       route.style.background = '#f3e8ff';
       route.style.borderColor = '#c4b5fd';
       route.style.color = '#5b21b6';
-      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>NO</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Route:</strong> Request Reviewer verifies → Dylan Review & Approve.';
+      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>NO</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Extension List:</strong> ' + (customerId ? (ext ? '<strong>YES</strong>' : '<strong>NO</strong>') : 'Enter Customer ID') + '<br><strong>Route:</strong> Request Reviewer verifies → Dylan Review & Approve.';
     } else if (rawDays <= 30) {
       route.style.background = '#eff6ff';
       route.style.borderColor = '#93c5fd';
       route.style.color = '#1e40af';
-      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>YES</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Route:</strong> Request Reviewer verifies → Steve / Rock / Rui Review & Approve.';
+      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>YES</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Extension List:</strong> ' + (customerId ? (ext ? '<strong>YES</strong>' : '<strong>NO</strong>') : 'Enter Customer ID') + '<br><strong>Route:</strong> Request Reviewer verifies → Steve / Rock / Rui Review & Approve.';
     } else if (ext) {
       route.style.background = '#f0fdf4';
       route.style.borderColor = '#86efac';
