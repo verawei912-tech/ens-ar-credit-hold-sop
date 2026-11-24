@@ -554,6 +554,71 @@
   .verdict-green { background: var(--green-light); color: #166534; border: 1px solid #86efac; }
   .verdict-red { background: var(--red-light); color: #991b1b; border: 1px solid #fca5a5; }
 
+
+  /* Live Date Decision Calculator */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 760px) { .calc-grid { grid-template-columns: 1fr; } }
+  .calc-field {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .calc-field label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 7px;
+  }
+  .calc-field input, .calc-field select {
+    width: 100%;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 11px;
+    font: inherit;
+    background: #fff;
+    color: var(--navy);
+  }
+  .calc-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .btn-calc { background: var(--blue); color:#fff; }
+  .btn-calc:hover { background:#1d4ed8; }
+  .result-grid {
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:12px;
+    margin-top:14px;
+  }
+  @media (max-width: 900px) { .result-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .result-grid { grid-template-columns: 1fr; } }
+  .result-card {
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:14px;
+    background:#fff;
+  }
+  .result-label { font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; }
+  .result-value { font-size:20px; font-weight:900; margin-top:4px; color:var(--navy); }
+  .result-yes { color:var(--red); }
+  .result-no { color:var(--green); }
+  .route-box {
+    margin-top:14px;
+    border-radius:10px;
+    padding:16px 18px;
+    font-size:14px;
+    font-weight:700;
+    border:1px solid #bfdbfe;
+    background:#eff6ff;
+    color:#1e3a8a;
+  }
+
   /* Tables */
   table {
     width: 100%;
@@ -676,16 +741,83 @@
 
 <div class="tabs-wrap">
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('tab-flow', this)">1. Interactive Credit Hold Release Flow</button>
-    <button class="tab-btn" onclick="switchTab('tab-verify', this)">2. Accounting Reviewer Checklist (Acumatica ↔ DingTalk)</button>
-    <button class="tab-btn" onclick="switchTab('tab-aging', this)">3. AR Aging Escalation &amp; Insurance Reporting</button>
+    <button class="tab-btn active" onclick="switchTab('tab-calc', this)">1. Date Decision Calculator</button>
+    <button class="tab-btn" onclick="switchTab('tab-flow', this)">2. Interactive Credit Hold Release Flow</button>
+    <button class="tab-btn" onclick="switchTab('tab-verify', this)">3. Accounting Reviewer Checklist (Acumatica ↔ DingTalk)</button>
+    <button class="tab-btn" onclick="switchTab('tab-aging', this)">4. AR Aging Escalation &amp; Insurance Reporting</button>
   </div>
 </div>
 
 <main class="container">
 
-  <!-- TAB 1: INTERACTIVE CREDIT HOLD FLOW -->
-  <section id="tab-flow" class="tab-panel active">
+
+  <!-- TAB 1: LIVE DATE DECISION CALCULATOR -->
+  <section id="tab-calc" class="tab-panel active">
+    <div class="card">
+      <div class="card-title">
+        <span>Credit Hold Release — Date Decision Calculator</span>
+        <span style="font-size:12px; background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:6px; font-weight:700;">Live Yes / No Check</span>
+      </div>
+      <div class="card-subtitle">
+        Enter the <strong>Review / Today's Date</strong> and the customer's <strong>First Due Date</strong>. The calculator follows the current SOP cutoff logic and tells you exactly how to answer the DingTalk date fields.
+      </div>
+
+      <div class="calc-grid">
+        <div class="calc-field">
+          <label for="calcToday">Review / Today's Date</label>
+          <input type="date" id="calcToday" onchange="calculateDecision()" />
+        </div>
+        <div class="calc-field">
+          <label for="calcDue">First Due Date</label>
+          <input type="date" id="calcDue" onchange="calculateDecision()" />
+        </div>
+        <div class="calc-field">
+          <label for="calcExtension">Customer on ENS Extension List?</label>
+          <select id="calcExtension" onchange="calculateDecision()">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="calc-actions">
+        <button class="btn btn-calc" onclick="calculateDecision()">Calculate Decision</button>
+        <button class="btn" style="background:#e2e8f0;color:#334155;" onclick="setCalculatorToday()">Use Today's Date</button>
+      </div>
+
+      <div id="calcError" class="alert-box" style="display:none; margin-top:0;"></div>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="result-label">Days from First Due Date</div>
+          <div class="result-value" id="calcDays">—</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Over 10 Business Days?</div>
+          <div class="result-value" id="calcOver10">—</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Over 30 Days Past Due?</div>
+          <div class="result-value" id="calcOver30">—</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Extension List?</div>
+          <div class="result-value" id="calcExtResult">NO</div>
+        </div>
+      </div>
+
+      <div class="route-box" id="calcRoute">
+        Enter the dates above to see the required DingTalk answers and approval route.
+      </div>
+
+      <div class="alert-box" style="margin-top:14px; background:#f8fafc; border-color:#cbd5e1; border-left-color:#64748b; color:#334155;">
+        <strong>Rule used by this calculator:</strong> First Due Date is the aging starting point. The current SOP visual uses a +10-day cutoff for the “Over 10 Business Days” field and +30 <strong>calendar days</strong> for the “Over 30 Days Past Due” field.
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: INTERACTIVE CREDIT HOLD FLOW -->
+  <section id="tab-flow" class="tab-panel">
 
     <div class="narration-bar">
       <div class="narration-badge" id="stepBadge">LIVE MODE</div>
@@ -1138,6 +1270,82 @@
     }
   }
 
+
+  function localISODate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function setCalculatorToday() {
+    document.getElementById('calcToday').value = localISODate(new Date());
+    calculateDecision();
+  }
+
+  function parseLocalDate(value) {
+    if (!value) return null;
+    const [y,m,d] = value.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+
+  function calculateDecision() {
+    const today = parseLocalDate(document.getElementById('calcToday').value);
+    const due = parseLocalDate(document.getElementById('calcDue').value);
+    const ext = document.getElementById('calcExtension').value === 'yes';
+    const err = document.getElementById('calcError');
+
+    document.getElementById('calcExtResult').textContent = ext ? 'YES' : 'NO';
+    document.getElementById('calcExtResult').className = 'result-value ' + (ext ? 'result-yes' : 'result-no');
+
+    if (!today || !due) {
+      err.style.display = 'none';
+      return;
+    }
+
+    const ms = 24 * 60 * 60 * 1000;
+    const rawDays = Math.floor((today - due) / ms);
+    const days = Math.max(0, rawDays);
+    const over10 = rawDays > 10;
+    const over30 = rawDays > 30;
+
+    document.getElementById('calcDays').textContent = rawDays < 0 ? 'Not Due Yet' : days + ' days';
+    document.getElementById('calcOver10').textContent = over10 ? 'YES' : 'NO';
+    document.getElementById('calcOver10').className = 'result-value ' + (over10 ? 'result-yes' : 'result-no');
+    document.getElementById('calcOver30').textContent = over30 ? 'YES' : 'NO';
+    document.getElementById('calcOver30').className = 'result-value ' + (over30 ? 'result-yes' : 'result-no');
+
+    if (rawDays < 0) {
+      err.style.display = 'block';
+      err.innerHTML = '<strong>Check dates:</strong> Review date is before the First Due Date. The invoice is not past due yet.';
+    } else {
+      err.style.display = 'none';
+    }
+
+    const route = document.getElementById('calcRoute');
+    if (rawDays <= 10) {
+      route.style.background = '#f3e8ff';
+      route.style.borderColor = '#c4b5fd';
+      route.style.color = '#5b21b6';
+      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>NO</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Route:</strong> Request Reviewer verifies → Dylan Review & Approve.';
+    } else if (rawDays <= 30) {
+      route.style.background = '#eff6ff';
+      route.style.borderColor = '#93c5fd';
+      route.style.color = '#1e40af';
+      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>YES</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Route:</strong> Request Reviewer verifies → Steve / Rock / Rui Review & Approve.';
+    } else if (ext) {
+      route.style.background = '#f0fdf4';
+      route.style.borderColor = '#86efac';
+      route.style.color = '#166534';
+      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>YES</strong> • Over 30 Days Past Due = <strong>YES</strong> • Extension List = <strong>YES</strong><br><strong>Route:</strong> Eligible to submit → Steve / Rock / Rui Review & Approve (not automatic approval).';
+    } else {
+      route.style.background = '#fef2f2';
+      route.style.borderColor = '#fca5a5';
+      route.style.color = '#991b1b';
+      route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>YES</strong> • Over 30 Days Past Due = <strong>YES</strong> • Extension List = <strong>NO</strong><br><strong>Outcome:</strong> AUTO REJECT — No Exception. Do not forward to Management.';
+    }
+  }
+
   function toggleAutoPlay() {
     if (isPlaying) {
       stopAutoPlay();
@@ -1187,6 +1395,7 @@
 
   // Initialize
   applyScenario(1);
+  setCalculatorToday();
 </script>
 </body>
 </html>
