@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ENS Accounting & Credit Hold Release Interactive SOP</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --purple: #7c3aed;
+    --purple-light: #f3e8ff;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --navy: #0f172a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding-bottom: 48px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    color: #fff;
+    padding: 24px 32px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  }
+  .header-inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .brand-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .header p {
+    font-size: 14px;
+    color: #cbd5e1;
+    margin-top: 4px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-play {
+    background: #22c55e;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.35);
+  }
+  .btn-play:hover { background: #16a34a; transform: translateY(-1px); }
+  .btn-play.playing { background: #ef4444; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.22);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+  /* Tabs */
+  .tabs-wrap {
+    max-width: 1140px;
+    margin: 22px auto 0;
+    padding: 0 20px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+
+  /* Main Container */
+  .container {
+    max-width: 1140px;
+    margin: 24px auto 0;
+    padding: 0 20px;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .card-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+
+  /* Narration Banner */
+  .narration-bar {
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-left: 5px solid #38bdf8;
+    min-height: 68px;
+  }
+  .narration-badge {
+    background: #38bdf8;
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .narration-text {
+    font-size: 14px;
+    color: #e2e8f0;
+  }
+  .narration-text strong { color: #ffffff; }
+
+  /* Controls Bar */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 16px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 768px) {
+    .controls-grid { grid-template-columns: 1fr; }
+  }
+  .control-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .current-date-pill {
+    background: var(--navy);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--blue);
+    cursor: pointer;
+    height: 6px;
+  }
+  .slider-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  .toggle-group {
+    display: flex;
+    gap: 8px;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+  }
+  .toggle-btn.active-yes {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .toggle-btn.active-no {
+    background: var(--red-light);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* Quick Scenarios */
+  .scenario-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .pill-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .pill-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .pill-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* Visual Timeline Board */
+  .board-wrap {
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 24px 20px 28px;
+    position: relative;
+    overflow-x: auto;
+  }
+  .board-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #f1f5f9;
+    padding: 5px 12px;
+    border-radius: 8px;
+    color: var(--navy);
+  }
+
+  .timeline-stage {
+    min-width: 820px;
+    position: relative;
+    padding-top: 44px;
+    padding-bottom: 10px;
+  }
+  .timeline-track {
+    position: relative;
+    height: 14px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    display: flex;
+    overflow: visible;
+  }
+  /* Segments: Day 0..10 (10/45 = 22.2%), Day 11..30 (20/45 = 44.4%), Day 31..45 (15/45 = 33.3%) */
+  .seg-purple {
+    width: 22.22%;
+    background: var(--purple);
+    border-radius: 999px 0 0 999px;
+    opacity: 0.35;
+    transition: opacity 0.3s, box-shadow 0.3s;
+  }
+  .seg-blue {
+    width: 44.44%;
+    background: var(--blue);
+    opacity: 0.35;
+    transition: opacity 0.3s, box-shadow 0.3s;
+    border-left: 3px solid #fff;
+  }
+  .seg-over30 {
+    width: 33.34%;
+    background: linear-gradient(90deg, #f97316, #dc2626);
+    border-radius: 0 999px 999px 0;
+    opacity: 0.35;
+    transition: opacity 0.3s, box-shadow 0.3s;
+    border-left: 3px solid #fff;
+  }
+  .seg-active {
+    opacity: 1 !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+  }
+  .seg-purple.seg-active { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.22); }
+  .seg-over30.seg-active { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.22); }
+
+  /* Ticks */
+  .tick {
+    position: absolute;
+    top: -10px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .tick-line {
+    width: 3px;
+    height: 34px;
+    background: var(--navy);
+    border-radius: 2px;
+  }
+  .tick-label {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--navy);
+    white-space: nowrap;
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .tick-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* Moving Cursor */
+  .cursor-pin {
+    position: absolute;
+    top: -42px;
+    transform: translateX(-50%);
+    transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cursor-bubble {
+    background: var(--navy);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+  }
+  .cursor-arrow {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid var(--navy);
+  }
+
+  /* Decision Cards Row */
+  .branches-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.25fr;
+    gap: 16px;
+    margin-top: 56px;
+    min-width: 820px;
+  }
+  .branch-card {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    background: #fafafa;
+    opacity: 0.52;
+    transform: scale(0.985);
+    transition: all 0.3s ease;
+  }
+  .branch-card.active-purple {
+    opacity: 1;
+    transform: scale(1);
+    background: var(--purple-light);
+    border-color: var(--purple);
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.14);
+  }
+  .branch-card.active-blue {
+    opacity: 1;
+    transform: scale(1);
+    background: var(--blue-light);
+    border-color: var(--blue);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.14);
+  }
+  .branch-card.active-over30 {
+    opacity: 1;
+    transform: scale(1);
+    background: #fff;
+    border-color: #94a3b8;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  }
+  .branch-header {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .branch-q {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 10px;
+  }
+  .ans-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 800;
+    margin-left: 4px;
+  }
+  .ans-no { background: #ede9fe; color: var(--purple); }
+  .ans-yes { background: #dbeafe; color: var(--blue); }
+  .approver-box {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-branch {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    background: #f8fafc;
+    opacity: 0.55;
+    transition: all 0.25s;
+  }
+  .sub-branch.active-green {
+    opacity: 1;
+    background: var(--green-light);
+    border-color: var(--green);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+  }
+  .sub-branch.active-red {
+    opacity: 1;
+    background: var(--red-light);
+    border-color: var(--red);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+  }
+  .sub-branch-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .sub-branch-action {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  /* Live Verdict Strip */
+  .verdict-box {
+    margin-top: 18px;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .verdict-purple { background: var(--purple-light); color: #5b21b6; border: 1px solid #c4b5fd; }
+  .verdict-blue { background: var(--blue-light); color: #1e40af; border: 1px solid #93c5fd; }
+  .verdict-green { background: var(--green-light); color: #166534; border: 1px solid #86efac; }
+  .verdict-red { background: var(--red-light); color: #991b1b; border: 1px solid #fca5a5; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: #f1f5f9;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #334155;
+    font-weight: 700;
+  }
+  tr:hover td { background: #f8fafc; }
+
+  .code-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  /* Example Box */
+  .example-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .metric-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .metric-label { font-size: 11.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+  .metric-val { font-size: 18px; font-weight: 800; color: var(--navy); margin-top: 2px; }
+  .metric-note { font-size: 12px; color: var(--blue); font-weight: 600; margin-top: 2px; }
+
+  /* AR Escalation Timeline */
+  .aging-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .aging-steps { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .aging-steps { grid-template-columns: 1fr; }
+  }
+  .aging-card {
+    border-radius: 12px;
+    padding: 18px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    position: relative;
+  }
+  .aging-day {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .day-0 { background: #e2e8f0; color: #0f172a; }
+  .day-30 { background: var(--blue-light); color: var(--blue); }
+  .day-60 { background: var(--amber-light); color: var(--amber); }
+  .day-90 { background: var(--red-light); color: var(--red); }
+  .aging-card h3 { font-size: 15px; margin-bottom: 8px; color: var(--navy); }
+  .aging-card ul { padding-left: 18px; font-size: 13px; color: #334155; }
+  .aging-card li { margin-bottom: 6px; }
+
+  .alert-box {
+    background: var(--amber-light);
+    border: 1px solid #fcd34d;
+    border-left: 5px solid var(--amber);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: #78350f;
+    margin-top: 16px;
+  }
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 28px;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div>
+      <div class="brand-tag">ENS Security • Accounting &amp; Sales SOP</div>
+      <h1>Net 30 Credit Hold Release &amp; AR Management Guide</h1>
+      <p>Interactive Visual Workflow • Effective November 16, 2026</p>
+    </div>
+    <div class="header-actions">
+      <button id="autoPlayBtn" class="btn btn-play" onclick="toggleAutoPlay()">
+        <span id="playIcon">▶</span> <span id="playText">Auto-Play SOP</span>
+      </button>
+      <button class="btn btn-secondary" onclick="resetDemo()">↺ Reset</button>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-flow', this)">1. Interactive Credit Hold Release Flow</button>
+    <button class="tab-btn" onclick="switchTab('tab-verify', this)">2. Accounting Reviewer Checklist (Acumatica ↔ DingTalk)</button>
+    <button class="tab-btn" onclick="switchTab('tab-aging', this)">3. AR Aging Escalation &amp; Insurance Reporting</button>
+  </div>
+</div>
+
+<main class="container">
+
+  <!-- TAB 1: INTERACTIVE CREDIT HOLD FLOW -->
+  <section id="tab-flow" class="tab-panel active">
+
+    <div class="narration-bar">
+      <div class="narration-badge" id="stepBadge">LIVE MODE</div>
+      <div class="narration-text" id="narrationText">
+        Drag the <strong>Date Slider</strong>, toggle the <strong>Extension List</strong> status, or click <strong>Auto-Play SOP</strong> to walk through all approval and rejection paths.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Net 30 Customer Credit Hold Release Flow</span>
+        <span style="font-size:12.5px; font-weight:600; color:var(--muted);">Benchmark Example: 1st Due Date = 12/1/2026</span>
+      </div>
+      <div class="card-subtitle">
+        Past-due thresholds are calculated strictly from the invoice <strong>1st Due Date</strong> (never the Invoice Date). Notice that the Blue segment begins strictly <strong>after</strong> 12/11/2026.
+      </div>
+
+      <!-- Quick Scenario Buttons -->
+      <div class="scenario-pills">
+        <button class="pill-btn" id="pill-1" onclick="applyScenario(1)">Scenario 1: Within 10 Days (12/06/2026)</button>
+        <button class="pill-btn" id="pill-2" onclick="applyScenario(2)">Scenario 2: 11–30 Days (12/20/2026)</button>
+        <button class="pill-btn" id="pill-3" onclick="applyScenario(3)">Scenario 3: Over 30 Days + On Extension List (01/06/2027)</button>
+        <button class="pill-btn" id="pill-4" onclick="applyScenario(4)">Scenario 4: Over 30 Days + NOT on List (01/06/2027)</button>
+      </div>
+
+      <!-- Interactive Controls -->
+      <div class="controls-grid">
+        <div>
+          <div class="control-label">
+            <span>Simulate Review Date (Calendar Days from 12/1/2026)</span>
+            <span class="current-date-pill" id="dateDisplay">12/06/2026 (Day +5)</span>
+          </div>
+          <input type="range" id="daySlider" min="0" max="45" value="5" oninput="handleSliderInput(this.value)" />
+          <div class="slider-marks">
+            <span>12/1/2026 (Day 0)</span>
+            <span>12/11/2026 (Day 10)</span>
+            <span>12/31/2026 (Day 30)</span>
+            <span>01/15/2027 (Day 45)</span>
+          </div>
+        </div>
+        <div>
+          <div class="control-label">
+            <span>ENS Internal Extension Customer List</span>
+            <span style="font-size:11px; color:var(--muted);">Applies after 12/31/2026</span>
+          </div>
+          <div class="toggle-group">
+            <button id="extYesBtn" class="toggle-btn" onclick="setExtension(true)">✓ Yes — On Extension List</button>
+            <button id="extNoBtn" class="toggle-btn active-no" onclick="setExtension(false)">✕ No — Not on List</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Whiteboard Visual Timeline -->
+      <div class="board-wrap">
+        <div class="board-meta">
+          <div class="meta-badge">Customer Type: Net 30 Customer</div>
+          <div class="meta-badge">1st Due Date: 12/1/2026</div>
+          <div class="meta-badge" id="statusPill">Current Status: Within 10 Days</div>
+        </div>
+
+        <div class="timeline-stage">
+          <!-- Moving Cursor -->
+          <div class="cursor-pin" id="cursorPin" style="left: 11.1%;">
+            <div class="cursor-bubble" id="cursorBubble">12/06/2026</div>
+            <div class="cursor-arrow"></div>
+          </div>
+
+          <!-- Colored Segments -->
+          <div class="timeline-track">
+            <div class="seg-purple" id="segPurple"></div>
+            <div class="seg-blue" id="segBlue"></div>
+            <div class="seg-over30" id="segOver30"></div>
+
+            <!-- Tick: 12/1/2026 -->
+            <div class="tick" style="left: 0%;">
+              <div class="tick-line"></div>
+              <div class="tick-label">12/1/2026</div>
+              <div class="tick-sub">1st Due Date</div>
+            </div>
+
+            <!-- Tick: 12/11/2026 -->
+            <div class="tick" style="left: 22.22%;">
+              <div class="tick-line"></div>
+              <div class="tick-label">12/11/2026</div>
+              <div class="tick-sub">+10 Days Cutoff</div>
+            </div>
+
+            <!-- Tick: 12/31/2026 -->
+            <div class="tick" style="left: 66.66%;">
+              <div class="tick-line"></div>
+              <div class="tick-label">12/31/2026</div>
+              <div class="tick-sub">+30 Calendar Days</div>
+            </div>
+
+            <!-- Tick: Over 30 Days -->
+            <div class="tick" style="left: 100%;">
+              <div class="tick-line" style="background: var(--red);"></div>
+              <div class="tick-label" style="color: var(--red);">Over 30 Days</div>
+              <div class="tick-sub">Past Due Gate</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Three Decision Branches -->
+        <div class="branches-grid">
+          <!-- Branch 1: Purple -->
+          <div class="branch-card" id="cardPurple">
+            <div class="branch-header" style="color: var(--purple);">Stage 1 • 12/1/2026 – 12/11/2026</div>
+            <div class="branch-q">
+              If any over 10 business days? <span class="ans-tag ans-no">No</span>
+            </div>
+            <div class="approver-box">
+              <span style="font-size:18px;">👤</span>
+              <div>
+                <div style="color:var(--purple);">Dylan</div>
+                <div style="font-size:12px; color:var(--muted); font-weight:600;">Review &amp; Approve</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Branch 2: Blue -->
+          <div class="branch-card" id="cardBlue">
+            <div class="branch-header" style="color: var(--blue);">Stage 2 • After 12/11/2026 – 12/31/2026</div>
+            <div class="branch-q">
+              If any over 10 Business Days? <span class="ans-tag ans-yes">Yes</span>
+            </div>
+            <div class="approver-box">
+              <span style="font-size:18px;">👥</span>
+              <div>
+                <div style="color:var(--blue);">Steve / Rock / Rui</div>
+                <div style="font-size:12px; color:var(--muted); font-weight:600;">Review &amp; Approve</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Branch 3: Over 30 Days -->
+          <div class="branch-card" id="cardOver30">
+            <div class="branch-header" style="color: var(--red);">Stage 3 • After 12/31/2026 (Over 30 Days Past Due = Yes)</div>
+            <div class="sub-branch" id="subGreen">
+              <div class="sub-branch-title">If customer on extension list? <strong>(Yes)</strong></div>
+              <div class="sub-branch-action" style="color: var(--green);">→ Steve / Rock / Rui Review &amp; Approve</div>
+              <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Exemption allows submission; NOT automatic approval.</div>
+            </div>
+            <div class="sub-branch" id="subRed">
+              <div class="sub-branch-title">If customer on extension list? <strong>(No)</strong></div>
+              <div class="sub-branch-action" style="color: var(--red);">→ Auto Reject (No Exception)</div>
+              <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Not eligible for submission; request stops immediately.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Verdict -->
+        <div id="verdictBox" class="verdict-box verdict-purple">
+          <div id="verdictMain">Action: Request Reviewer verifies fields → Approve → Route to Dylan for Review &amp; Approve.</div>
+          <div id="verdictTag" style="font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">Eligible</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: ACCOUNTING REVIEWER CHECKLIST -->
+  <section id="tab-verify" class="tab-panel">
+    <div class="card">
+      <div class="card-title">
+        <span>Request Reviewer Verification: Acumatica ↔ DingTalk</span>
+        <span style="font-size:12px; background:#eff6ff; color:#1d4ed8; padding:4px 10px; border-radius:6px; font-weight:700;">4-Person Reviewer Gate</span>
+      </div>
+      <div class="card-subtitle">
+        Before any Sales Order Credit Hold Release request reaches management approvers, the Accounting Request Reviewer team (Yoga, Junelle, Lena.Li, etc.) must verify <strong>both the top and bottom sections</strong> of the DingTalk form against Acumatica's <strong>FINANCIAL</strong> tab.
+      </div>
+
+      <!-- Worked Example: C18071 -->
+      <div style="font-size:13px; font-weight:700; color:var(--navy); margin-bottom:10px;">Worked Example — Customer C18071 (Eagle I Security)</div>
+      <div class="example-grid">
+        <div class="metric-box">
+          <div class="metric-label">First Due Date (Acumatica)</div>
+          <div class="metric-val">7/2/2026</div>
+          <div class="metric-note">+30 Calendar Days = 8/1/2026</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Account Balance ($)</div>
+          <div class="metric-val">$11,387.32</div>
+          <div class="metric-note">Terms: NET30 - Net 30 Days</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Credit Limit ($)</div>
+          <div class="metric-val">$20,000.00</div>
+          <div class="metric-note">110% Threshold = $22,000.00</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Reviewer Rule</div>
+          <div class="metric-val" style="color:var(--red);">Zero Tolerance</div>
+          <div class="metric-note">Any wrong field = Reject &amp; Resubmit</div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:28%;">DingTalk Approval Form Field</th>
+              <th style="width:28%;">Acumatica / Reference Source</th>
+              <th style="width:44%;">Verification Formula &amp; Reviewer Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Acumatica Customer ID</strong></td>
+              <td>Header <span class="code-pill">Customer ID</span></td>
+              <td>Confirm the Customer ID and account name match Acumatica exactly (e.g., <span class="code-pill">C18071 - Eagle I Security</span>).</td>
+            </tr>
+            <tr>
+              <td><strong>If a Net Term Customer?</strong></td>
+              <td>FINANCIAL → <span class="code-pill">Terms</span></td>
+              <td>If customer has Net terms (e.g., <span class="code-pill">NET30</span>), must be marked <strong>Yes</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>If Any Over 30 Days Past Due?</strong></td>
+              <td>FINANCIAL → <span class="code-pill">First Due Date</span></td>
+              <td>Calculate <span class="code-pill">First Due Date + 30 Calendar Days</span> (<strong>Calendar Days</strong>, NOT Business Days). Example: <span class="code-pill">7/2/2026 + 30 days = 8/1/2026</span>.</td>
+            </tr>
+            <tr>
+              <td><strong>If the customer on extension list?</strong></td>
+              <td>Management's <strong>ENS Internal Extension Customer List</strong></td>
+              <td>Cross-check the official team extension list. If Over 30 Days = <strong>Yes</strong> and Extension List = <strong>No</strong> → <strong>Reject immediately (No Exception)</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Account Balance + New SO &gt; 110% Credit Limit</strong></td>
+              <td><span class="code-pill">Balance ($)</span> + <span class="code-pill">SO Amount ($)</span> vs <span class="code-pill">Credit Limit ($)</span></td>
+              <td>Verify <span class="code-pill">(Balance + New SO) &gt; (Credit Limit × 1.10)</span>. Example: <span class="code-pill">$11,387.32 + $4,585.00 = $15,972.32 ≤ $22,000</span> → <strong>No</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>If the First Due Date exceeds 10 business days</strong></td>
+              <td>FINANCIAL → <span class="code-pill">First Due Date</span></td>
+              <td>Verify whether the review date has passed the 10-day cutoff (determines routing to <strong>Dylan</strong> vs <strong>Steve / Rock / Rui</strong>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert-box">
+        <strong>Handling Incorrect Submissions:</strong> If ANY field on the DingTalk form is filled incorrectly (e.g., marking "No" when the account is actually over 30 calendar days past due, or falsely claiming the customer is on the extension list), <strong>Reject the request immediately</strong>, do not forward to approvers, and email the submitter to review the rules and resubmit accurately. Escalate repeated or intentional non-compliance to management via the AR group chat.
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: AR AGING & INSURANCE REPORTING -->
+  <section id="tab-aging" class="tab-panel">
+    <div class="card">
+      <div class="card-title">
+        <span>AR Aging Escalation &amp; Credit Insurance Reporting Timeline</span>
+        <span style="font-size:12px; background:#fef2f2; color:#b91c1c; padding:4px 10px; border-radius:6px; font-weight:700;">Strict Compliance Window</span>
+      </div>
+      <div class="card-subtitle">
+        All aging milestones are measured strictly from the invoice <strong>Due Date</strong> (NEVER the Invoice Date). Monitor Acumatica AR Aging reports routinely and whenever customers place new orders.
+      </div>
+
+      <div class="aging-steps">
+        <div class="aging-card">
+          <span class="aging-day day-0">Day 0 • Due Date</span>
+          <h3>Aging Clock Starts</h3>
+          <ul>
+            <li>Calculated from <strong>Due Date</strong>, never Invoice Date.</li>
+            <li>Track <strong>Balance</strong> and <strong>First Due Date</strong> in Acumatica AR Aging report.</li>
+          </ul>
+        </div>
+
+        <div class="aging-card">
+          <span class="aging-day day-30">Day 30+ • Calendar Days</span>
+          <h3>Credit Hold Release Gate</h3>
+          <ul>
+            <li>Not on Extension List → <strong>Ineligible / Auto Reject</strong>.</li>
+            <li>On Extension List → Eligible for submission to <strong>Steve / Rock / Rui</strong> (not auto-approved).</li>
+          </ul>
+        </div>
+
+        <div class="aging-card">
+          <span class="aging-day day-60">Day 60+ • Internal Alert</span>
+          <h3>Sales &amp; Management Alert</h3>
+          <ul>
+            <li>Immediately notify <strong>Sales</strong>, <strong>Sales Manager</strong>, and <strong>Dylan</strong>.</li>
+            <li>Push aggressive collection before Day 90.</li>
+            <li>For vague payment plans (e.g., Eagle I), draft a formal deadline warning email and get <strong>Yoga's review</strong> before sending.</li>
+          </ul>
+        </div>
+
+        <div class="aging-card" style="border-color:#fca5a5; background:#fffafa;">
+          <span class="aging-day day-90">Day 90+ &amp; &gt; $10,000</span>
+          <h3>Insurance Reporting</h3>
+          <ul>
+            <li><strong>Two mandatory conditions (BOTH required):</strong> Past Due <strong>&gt; 90 days</strong> AND Overdue Amount <strong>&gt; $10,000</strong>.</li>
+            <li><strong>Filing Deadline:</strong> Report to the credit insurer <strong>within 30 days after Day 90</strong> (Day 90–120 window).</li>
+            <li><strong>Bankruptcy Exception:</strong> Report immediately regardless of days or amount.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="alert-box" style="background:#f0fdf4; border-color:#86efac; border-left-color:#16a34a; color:#14532d;">
+        <strong>Key Distinction:</strong> If a customer is over 90 days past due but their overdue balance is <strong>$10,000 or less</strong> (and there is no bankruptcy), credit insurance reporting is <strong>not required</strong> — continue standard internal collection procedures.
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    ENS Security • Accounting Department Standard Operating Procedure (Self-Contained Offline HTML Guide)
+  </div>
+</main>
+
+<script>
+  const baseDate = new Date(2026, 11, 1); // Dec 1, 2026
+  let currentDay = 5;
+  let onExtensionList = false;
+  let isPlaying = false;
+  let playTimer = null;
+
+  function formatDate(daysOffset) {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + Number(daysOffset));
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const y = d.getFullYear();
+    return `${m}/${day}/${y}`;
+  }
+
+  function switchTab(tabId, btnEl) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btnEl.classList.add('active');
+    if (isPlaying && tabId !== 'tab-flow') stopAutoPlay();
+  }
+
+  function handleSliderInput(val) {
+    stopAutoPlay();
+    currentDay = Number(val);
+    clearPills();
+    updateUI();
+  }
+
+  function setExtension(val) {
+    stopAutoPlay();
+    onExtensionList = val;
+    clearPills();
+    updateUI();
+  }
+
+  function clearPills() {
+    document.querySelectorAll('.pill-btn').forEach(p => p.classList.remove('active'));
+  }
+
+  function applyScenario(num, fromAutoPlay = false) {
+    if (!fromAutoPlay) stopAutoPlay();
+    clearPills();
+    const pill = document.getElementById(`pill-${num}`);
+    if (pill) pill.classList.add('active');
+
+    if (num === 1) {
+      currentDay = 5; // 12/6/2026
+      onExtensionList = false;
+    } else if (num === 2) {
+      currentDay = 19; // 12/20/2026
+      onExtensionList = false;
+    } else if (num === 3) {
+      currentDay = 36; // 1/6/2027
+      onExtensionList = true;
+    } else if (num === 4) {
+      currentDay = 36; // 1/6/2027
+      onExtensionList = false;
+    }
+    document.getElementById('daySlider').value = currentDay;
+    updateUI(fromAutoPlay ? num : 0);
+  }
+
+  function updateUI(autoStep = 0) {
+    const dateStr = formatDate(currentDay);
+    document.getElementById('dateDisplay').textContent = `${dateStr} (Day +${currentDay})`;
+    document.getElementById('cursorBubble').textContent = dateStr;
+
+    const pct = (currentDay / 45) * 100;
+    document.getElementById('cursorPin').style.left = `${pct}%`;
+
+    // Extension toggle buttons
+    const yesBtn = document.getElementById('extYesBtn');
+    const noBtn = document.getElementById('extNoBtn');
+    yesBtn.className = 'toggle-btn' + (onExtensionList ? ' active-yes' : '');
+    noBtn.className = 'toggle-btn' + (!onExtensionList ? ' active-no' : '');
+
+    // Reset highlights
+    const segPurple = document.getElementById('segPurple');
+    const segBlue = document.getElementById('segBlue');
+    const segOver30 = document.getElementById('segOver30');
+    const cardPurple = document.getElementById('cardPurple');
+    const cardBlue = document.getElementById('cardBlue');
+    const cardOver30 = document.getElementById('cardOver30');
+    const subGreen = document.getElementById('subGreen');
+    const subRed = document.getElementById('subRed');
+
+    [segPurple, segBlue, segOver30].forEach(el => el.classList.remove('seg-active'));
+    cardPurple.className = 'branch-card';
+    cardBlue.className = 'branch-card';
+    cardOver30.className = 'branch-card';
+    subGreen.className = 'sub-branch';
+    subRed.className = 'sub-branch';
+
+    const statusPill = document.getElementById('statusPill');
+    const verdictBox = document.getElementById('verdictBox');
+    const verdictMain = document.getElementById('verdictMain');
+    const verdictTag = document.getElementById('verdictTag');
+    const narrationText = document.getElementById('narrationText');
+    const stepBadge = document.getElementById('stepBadge');
+
+    if (currentDay <= 10) {
+      segPurple.classList.add('seg-active');
+      cardPurple.classList.add('active-purple');
+      statusPill.textContent = 'Current Status: Within 10 Days (≤ 12/11/2026)';
+      verdictBox.className = 'verdict-box verdict-purple';
+      verdictMain.innerHTML = '<strong>Outcome:</strong> Over 10 Business Days = <strong>No</strong> → Reviewer verifies fields → Approve → Routes to <strong>Dylan</strong> for Review &amp; Approve.';
+      verdictTag.textContent = 'Route: Dylan';
+      stepBadge.textContent = autoStep ? 'STEP 1 OF 4' : 'STAGE 1';
+      narrationText.innerHTML = `On <strong>${dateStr}</strong> (Day +${currentDay}), the account has not exceeded the <strong>12/11/2026</strong> cutoff. Sales marks "Over 10 business days = No" and "Over 30 days = No". After Request Reviewer verification, it goes to <strong>Dylan</strong>.`;
+    } else if (currentDay <= 30) {
+      segBlue.classList.add('seg-active');
+      cardBlue.classList.add('active-blue');
+      statusPill.textContent = 'Current Status: 11–30 Days (After 12/11/2026 to 12/31/2026)';
+      verdictBox.className = 'verdict-box verdict-blue';
+      verdictMain.innerHTML = '<strong>Outcome:</strong> Over 10 Business Days = <strong>Yes</strong> (Not Over 30 Days) → Reviewer verifies fields → Approve → Routes to <strong>Steve / Rock / Rui</strong>.';
+      verdictTag.textContent = 'Route: Steve / Rock / Rui';
+      stepBadge.textContent = autoStep ? 'STEP 2 OF 4' : 'STAGE 2';
+      narrationText.innerHTML = `On <strong>${dateStr}</strong> (Day +${currentDay}), the account is strictly <strong>past 12/11/2026</strong> (Blue segment) but still within 30 calendar days (≤ 12/31/2026). Sales marks "Over 10 business days = Yes" and "Over 30 days = No", routing to <strong>Steve / Rock / Rui</strong>.`;
+    } else {
+      segOver30.classList.add('seg-active');
+      cardOver30.classList.add('active-over30');
+      if (onExtensionList) {
+        subGreen.classList.add('active-green');
+        statusPill.textContent = 'Current Status: Over 30 Days Past Due + On Extension List';
+        verdictBox.className = 'verdict-box verdict-green';
+        verdictMain.innerHTML = '<strong>Outcome:</strong> Over 30 Days = <strong>Yes</strong> &amp; On Extension List = <strong>Yes</strong> → Reviewer confirms accuracy → Routes to <strong>Steve / Rock / Rui</strong> (No Auto-Approval).';
+        verdictTag.textContent = 'Exempted • Management Review';
+        stepBadge.textContent = autoStep ? 'STEP 3 OF 4' : 'STAGE 3 (EXEMPT)';
+        narrationText.innerHTML = `On <strong>${dateStr}</strong> (Day +${currentDay}), the account is <strong>Over 30 Calendar Days Past Due</strong> (past 12/31/2026). Because the customer IS on the <strong>ENS Extension List</strong>, the request may proceed to <strong>Steve / Rock / Rui</strong> for final review.`;
+      } else {
+        subRed.classList.add('active-red');
+        statusPill.textContent = 'Current Status: Over 30 Days Past Due + NOT on Extension List';
+        verdictBox.className = 'verdict-box verdict-red';
+        verdictMain.innerHTML = '<strong>Outcome:</strong> Over 30 Days = <strong>Yes</strong> &amp; On Extension List = <strong>No</strong> → <strong>Auto Reject (No Exception)</strong>. Do NOT forward to Management.';
+        verdictTag.textContent = 'Auto Reject • No Exception';
+        stepBadge.textContent = autoStep ? 'STEP 4 OF 4' : 'STAGE 3 (REJECT)';
+        narrationText.innerHTML = `On <strong>${dateStr}</strong> (Day +${currentDay}), the account is <strong>Over 30 Calendar Days Past Due</strong> and is <strong>NOT</strong> on the Extension List. Per policy, this triggers an immediate <strong>Auto Reject with No Exception</strong>.`;
+      }
+    }
+  }
+
+  function toggleAutoPlay() {
+    if (isPlaying) {
+      stopAutoPlay();
+      return;
+    }
+    // Ensure Tab 1 is visible
+    const firstTabBtn = document.querySelector('.tab-btn');
+    switchTab('tab-flow', firstTabBtn);
+
+    isPlaying = true;
+    const btn = document.getElementById('autoPlayBtn');
+    btn.classList.add('playing');
+    document.getElementById('playIcon').textContent = '■';
+    document.getElementById('playText').textContent = 'Stop Auto-Play';
+
+    let step = 1;
+    applyScenario(step, true);
+    playTimer = setInterval(() => {
+      step++;
+      if (step > 4) {
+        stopAutoPlay();
+        document.getElementById('stepBadge').textContent = 'COMPLETE';
+        document.getElementById('narrationText').innerHTML = '<strong>Walkthrough Complete!</strong> Drag the slider to test any date, or switch to Tabs 2 &amp; 3 for the Acumatica Checklist and AR Insurance Reporting SOP.';
+        return;
+      }
+      applyScenario(step, true);
+    }, 3800);
+  }
+
+  function stopAutoPlay() {
+    isPlaying = false;
+    if (playTimer) {
+      clearInterval(playTimer);
+      playTimer = null;
+    }
+    const btn = document.getElementById('autoPlayBtn');
+    btn.classList.remove('playing');
+    document.getElementById('playIcon').textContent = '▶';
+    document.getElementById('playText').textContent = 'Auto-Play SOP';
+  }
+
+  function resetDemo() {
+    stopAutoPlay();
+    applyScenario(1);
+    document.getElementById('stepBadge').textContent = 'LIVE MODE';
+  }
+
+  // Initialize
+  applyScenario(1);
+</script>
+</body>
+</html>
