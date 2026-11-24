@@ -799,7 +799,11 @@
         </div>
         <div class="result-card">
           <div class="result-label">Extension List?</div>
-          <div class="result-value" id="calcExtResult">NO</div>
+          <div class="result-value" id="calcExtResult">—</div>
+        </div>
+        <div class="result-card" style="grid-column: 1 / -1;">
+          <div class="result-label">Required Approver</div>
+          <div class="result-value" id="calcApprover">—</div>
         </div>
       </div>
 
@@ -1328,22 +1332,32 @@
     }
 
     const route = document.getElementById('calcRoute');
+    const approver = document.getElementById('calcApprover');
+
     if (rawDays <= 10) {
+      approver.textContent = 'Dylan';
+      approver.style.color = '#7c3aed';
       route.style.background = '#f3e8ff';
       route.style.borderColor = '#c4b5fd';
       route.style.color = '#5b21b6';
       route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>NO</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Extension List:</strong> ' + (customerId ? (ext ? '<strong>YES</strong>' : '<strong>NO</strong>') : 'Enter Customer ID') + '<br><strong>Route:</strong> Request Reviewer verifies → Dylan Review & Approve.';
     } else if (rawDays <= 30) {
+      approver.textContent = 'Rock / Steve / Rui';
+      approver.style.color = '#2563eb';
       route.style.background = '#eff6ff';
       route.style.borderColor = '#93c5fd';
       route.style.color = '#1e40af';
       route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>YES</strong> • Over 30 Days Past Due = <strong>NO</strong><br><strong>Extension List:</strong> ' + (customerId ? (ext ? '<strong>YES</strong>' : '<strong>NO</strong>') : 'Enter Customer ID') + '<br><strong>Route:</strong> Request Reviewer verifies → Steve / Rock / Rui Review & Approve.';
     } else if (ext) {
+      approver.textContent = 'Rock / Steve / Rui';
+      approver.style.color = '#16a34a';
       route.style.background = '#f0fdf4';
       route.style.borderColor = '#86efac';
       route.style.color = '#166534';
       route.innerHTML = '<strong>DingTalk:</strong> Over 10 Business Days = <strong>YES</strong> • Over 30 Days Past Due = <strong>YES</strong> • Extension List = <strong>YES</strong><br><strong>Route:</strong> Eligible to submit → Steve / Rock / Rui Review & Approve (not automatic approval).';
     } else {
+      approver.textContent = 'None — Auto Reject';
+      approver.style.color = '#dc2626';
       route.style.background = '#fef2f2';
       route.style.borderColor = '#fca5a5';
       route.style.color = '#991b1b';
